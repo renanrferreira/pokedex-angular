@@ -13,3 +13,8 @@ Aplicação Single Page Application (SPA) desenvolvida para listar e detalhar Po
 * Injeção de Dependências.
 * Renderização dinâmica de listas com `*ngFor`.
 * Tratamento de erros de conexão.
+
+## 🚀 Como executar
+1. Clone o repositório.
+2. Execute `npm install` para instalar as dependências.
+3. Execute `ng serve` para iniciar o servidor local.
