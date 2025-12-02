@@ -1,0 +1,174 @@
+<div class="pokedex-root">
+  <div class="pokedex-container" [class.content-closed]="isClosed()">
+    <div class="pokedex-header">
+      <div class="pokedex-ball-container">
+        <div class="pokedex-ball-outer">
+          <div class="pokedex-ball-inner" (click)="introPoke()" style="cursor: pointer;">
+            <div class="pokedex-ball-light"></div>
+          </div>
+        </div>
+
+        <div class="pokedex-lights">
+          <div class="light-red"></div>
+          <div class="light-yellow"></div>
+          <div class="light-green"></div>
+        </div>
+      </div>
+
+      <button class="pokedex-toggle-btn" (click)="togglePokedex()" [class.closed]="isClosed()">
+        <span class="toggle-icon">{{ isClosed() ? '▶' : '◀' }}</span>
+      </button>
+
+    </div>
+   
+    <div class="pokedex-content" [class.closed]="isClosed()">
+      <div class="search-wrapper">
+        <input
+          type="text"
+          placeholder="BUSCAR POKEMON..."
+          class="search-input"
+          (input)="updateSearch($event)"
+          [value]="searchTerm()"
+        >
+      </div>
+
+      <div class="pokemon-list" #pokemonList>
+
+        <ng-container *ngIf="loading(); else showList">
+          <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">DOWNLOADING DATA...</p>
+          </div>
+        </ng-container>
+
+        <ng-template #showList>
+          <ng-container *ngIf="filteredPokemons().length > 0; else noData">
+            <div class="pokemon-grid">
+              <div *ngFor="let pokemon of filteredPokemons(); trackBy: trackById; let first = first; let last = last"
+                  class="pokemon-card"
+                  [attr.data-first]="first"
+                  [attr.data-last]="last"
+                  (click)="toggleCard(pokemon)">
+
+                <div class="pokemon-card-inner"
+                     [class.flipped]="pokemon.isFlipped">
+
+                  <div class="pokemon-card-front">
+                    <div class="pokemon-card-header">
+                      <span class="pokemon-id">ID: {{ formatId(pokemon.id) }}</span>
+                      <div class="pokemon-dot"></div>
+                    </div>
+
+                    <div class="pokemon-image-wrapper">
+                      <div class="pokemon-image-bg"></div>
+                      <img [src]="pokemon.image" [alt]="pokemon.name" class="pokemon-image"/>
+                    </div>
+
+                    <div class="pokemon-name-bar">
+                      <h3>{{ pokemon.name | uppercase }}</h3>
+                      <p>INFORMAÇÕES</p>
+                    </div>
+                  </div>
+
+                  <div class="pokemon-card-back">
+
+                    <div class="pokemon-card-back-overlay"></div>
+
+                    <div class="pokemon-card-back-header">
+                      <span class="pokemon-name">{{ pokemon.name | uppercase }}</span>
+                      <span class="pokemon-data-label">DATA</span>
+                    </div>
+
+                    <div class="pokemon-card-back-content custom-scrollbar">
+
+                      <ng-container *ngIf="pokemon.isLoadingDetails; else showDetails">
+                        <div class="loading-details">
+                          <div class="loading-spinner-small"></div>
+                          <span>ACESSANDO DB...</span>
+                        </div>
+                      </ng-container>
+
+                      <ng-template #showDetails>
+                        <ng-container *ngIf="pokemon.details">
+                          <div class="pokemon-types">
+                            <span *ngFor="let type of pokemon.details.types" class="pokemon-type">{{ type | uppercase }}</span>
+                          </div>
+
+                          <div class="pokemon-stats-summary">
+                            <div><span>HGT</span>{{ pokemon.details.height / 10 }}m</div>
+                            <div><span>WGT</span>{{ pokemon.details.weight / 10 }}kg</div>
+                            <div><span>XP</span>{{ pokemon.details.baseExperience }}</div>
+                          </div>
+
+                          <div class="pokemon-abilities">
+                            <h4>Abilidades</h4>
+                            <div class="abilities-list">
+                              <span *ngFor="let ability of pokemon.details.abilities">{{ ability | titlecase }}</span>
+                            </div>
+                          </div>
+
+                          <div class="pokemon-combat-stats">
+                            <h4>Status de Combate</h4>
+                            <div class="stat" *ngFor="let stat of statKeys">
+                              <span class="stat-label">{{ stat | uppercase }}</span>
+                              <div class="stat-bar">
+                                <div class="stat-fill stat-{{ stat }}" [style.width.%]="(getStat(pokemon, stat) / 200) * 100"></div>
+                              </div>
+                              <span class="stat-value">{{ getStat(pokemon, stat) }}</span>
+                            </div>
+                          </div>
+                        </ng-container>
+                      </ng-template>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-template #noData>
+            <div class="no-data">NO DATA FOUND.</div>
+          </ng-template>
+        </ng-template>
+
+      </div>
+
+      <div class="button-bar">
+        <div class="footer-left">
+          <div class="ping-dot"></div>
+        </div>
+        <div class="footer-center">
+          <div class="red-bar" (click)="scrollToFirst()" style="cursor: pointer;"></div>
+          <div class="blue-bar" (click)="scrollToLast()" style="cursor: pointer;"></div>
+        </div>
+        <div class="footer-right">
+          <div class="corner-block top" 
+              (mousedown)="startScrollUp()" 
+              (mouseup)="stopScroll()" 
+              (mouseleave)="stopScroll()"
+              (touchstart)="startScrollUp(); $event.preventDefault()"
+              (touchend)="stopScroll()"
+              (touchcancel)="stopScroll()"
+              style="cursor: pointer;"></div>
+          <div class="corner-block bottom" 
+              (mousedown)="startScrollDown()" 
+              (mouseup)="stopScroll()" 
+              (mouseleave)="stopScroll()"
+              (touchstart)="startScrollDown(); $event.preventDefault()"
+              (touchend)="stopScroll()"
+              (touchcancel)="stopScroll()"
+              style="cursor: pointer;"></div>
+          <div class="corner-block left"></div>
+          <div class="corner-block right"></div>
+          <div class="corner-block center"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div> 
+</div>
